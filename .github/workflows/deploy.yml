@@ -24,5 +24,6 @@ jobs:
 
             # Backend
             cd ../waari-nodejs
+            
             npm i
             pm2 restart waaritour
