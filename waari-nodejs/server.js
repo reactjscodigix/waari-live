@@ -12,6 +12,13 @@ const bodyParser = require("body-parser");
 const app = express();
 const server = http.createServer(app);
 
+console.log('🔍 Loaded from .env:');
+console.log('DB_HOST =', JSON.stringify(process.env.DB_HOST));
+console.log('DB_PORT =', JSON.stringify(process.env.DB_PORT));
+console.log('DB_USER =', JSON.stringify(process.env.DB_USER));
+console.log('DB_PASS =', JSON.stringify(process.env.DB_PASS)); // temporarily ok for debug
+console.log('DB_NAME =', JSON.stringify(process.env.DB_NAME));
+
 // ✅ Socket.io with CORS
 const io = socketIo(server, {
   cors: {
@@ -176,7 +183,7 @@ io.on("connection", (socket) => {
 // ===== Serve Frontend in Production =====
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "client", "dist")));
-  app.get("*", (req, res) => {
+  app.get(/.*/, (req, res) => {
     res.sendFile(path.join(__dirname, "client", "dist", "index.html"));
   });
 }
