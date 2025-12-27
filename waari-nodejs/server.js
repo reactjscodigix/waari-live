@@ -12,12 +12,12 @@ const bodyParser = require("body-parser");
 const app = express();
 const server = http.createServer(app);
 
-console.log('🔍 Loaded from .env:');
-console.log('DB_HOST =', JSON.stringify(process.env.DB_HOST));
-console.log('DB_PORT =', JSON.stringify(process.env.DB_PORT));
-console.log('DB_USER =', JSON.stringify(process.env.DB_USER));
-console.log('DB_PASS =', JSON.stringify(process.env.DB_PASS)); // temporarily ok for debug
-console.log('DB_NAME =', JSON.stringify(process.env.DB_NAME));
+console.log("🔍 Loaded from .env:");
+console.log("DB_HOST =", JSON.stringify(process.env.DB_HOST));
+console.log("DB_PORT =", JSON.stringify(process.env.DB_PORT));
+console.log("DB_USER =", JSON.stringify(process.env.DB_USER));
+console.log("DB_PASS =", JSON.stringify(process.env.DB_PASS)); // temporarily ok for debug
+console.log("DB_NAME =", JSON.stringify(process.env.DB_NAME));
 
 // ✅ Socket.io with CORS
 const io = socketIo(server, {
@@ -118,41 +118,54 @@ app.get("/", (req, res) => {
 // });
 
 // ===== Operation Routes =====
+const apiRouter = express.Router();
+
 const authRoutes = require("./src/routes/AuthRoute");
+apiRouter.use(authRoutes);
+
 const userRoute = require("./src/routes/user.routes");
-app.use("/api", userRoute);
-app.use("/api", authRoutes);
+apiRouter.use(userRoute);
+
 const operationRoutes = require("./src/routes/operationRoutes");
-app.use("/api/operations", operationRoutes);
+apiRouter.use("/operations", operationRoutes);
 
 const roleRoutes = require("./src/routes/roleRoutes");
-app.use("/api/role", roleRoutes);
+apiRouter.use("/role", roleRoutes);
+
 const userRoutes = require("./src/routes/userRoute");
-app.use("/api/user", userRoutes);
+apiRouter.use("/user", userRoutes);
+
 const billRoutes = require("./src/routes/billRoute");
-app.use("/api/billing", billRoutes);
+apiRouter.use("/billing", billRoutes);
 
 const groupTourRoutes = require("./src/routes/groupTourRoute");
-app.use("/api", groupTourRoutes);
+apiRouter.use(groupTourRoutes);
+
 const GTourRoute = require("./src/routes/GTourRoute");
-app.use("/api", GTourRoute);
+apiRouter.use(GTourRoute);
+
 const roleRoute = require("./src/routes/roleRoute");
-app.use("/api", roleRoute);
+apiRouter.use(roleRoute);
 
 const adminRoutes = require("./src/routes/admin");
-app.use("/api", adminRoutes);
+apiRouter.use(adminRoutes);
+
 const AddTourRoutes = require("./src/routes/AddTour");
-app.use("/api", AddTourRoutes);
+apiRouter.use(AddTourRoutes);
+
 const enqueriesRoutes = require("./src/routes/EnqueriesRoutes");
-app.use("/api", enqueriesRoutes);
+apiRouter.use(enqueriesRoutes);
+
 const aiRoutes = require("./src/routes/aiRoutes");
-app.use("/api/ai", aiRoutes);
+apiRouter.use("/ai", aiRoutes);
 
 // PDF Routes
 const pdfRoutes = require("./src/routes/pdfRoutes");
-app.use("/api", pdfRoutes);
-const couponRoutes = require("./src/routes/coupon");
-app.use("/api", couponRoutes);
+apiRouter.use(pdfRoutes);
+
+// Mount API Router for both /api (standard) and / (fallback for stripped prefix)
+app.use("/api", apiRouter);
+app.use("/", apiRouter);
 
 // const cityListRoutes = require("./src/routes/cityList");
 // app.use("/api/city-list", cityListRoutes.cityList)
@@ -195,4 +208,3 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
 });
-
