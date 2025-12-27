@@ -1,7 +1,7 @@
 name: Deploy waari to VPS
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -13,19 +13,16 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            set -e
             cd /var/www/waari-live
             git pull origin main
-            # Install backend deps
-            cd waari-nodejs
-            # Install all dependencies including dev dependencies to ensure dotenv is available
-            npm install
-            # Or if you want production only, ensure dotenv is in dependencies (it is), but verify node_modules
-            # npm ci --production
-            cd ..
-            # Build frontend
+
+            # Frontend
             cd waari-reactjs
-            npm install
-            VITE_WAARI_BASEURL=https://waaritour.codigix.co/api npm run build
-            cd ..
-            # Restart PM2 app (replace 'waari' if your app name is different)
-            pm2 restart waari
+            npm i
+            npm run build
+
+            # Backend
+            cd ../waari-nodejs
+            npm i
+            pm2 restart waaritour
