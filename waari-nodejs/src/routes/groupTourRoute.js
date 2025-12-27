@@ -10,7 +10,6 @@ const { query, validationResult } = require("express-validator");
 // ---------------- VIEW GROUP TOUR ----------------
 router.get("/view-group-tour", async (req, res) => {
   try {
-    // ✅ Token validation
     const tokenData = await CommonController.checkToken(req.headers["token"], [
       32,
     ]);
@@ -33,64 +32,111 @@ router.get("/view-group-tour", async (req, res) => {
       cityId: req.query.cityId?.trim() || "",
     };
 
-    // ✅ Build filtered query with JOIN to get tourTypeName
-    let query = `
-      SELECT g.*, t.tourTypeName
+    let baseQuery = `
+      SELECT g.*, t.tourTypeName, COALESCE(seats.bookedSeats, 0) AS bookedSeats
       FROM grouptours g
       LEFT JOIN tourtype t ON g.tourTypeId = t.tourTypeId
-      WHERE 1=1
+      LEFT JOIN (
+        SELECT groupTourId, COUNT(*) AS bookedSeats
+        FROM grouptourguestdetails
+        WHERE isCancel = 0
+        GROUP BY groupTourId
+      ) AS seats ON seats.groupTourId = g.groupTourId
+      WHERE g.groupTourProcess = 1
     `;
-    let params = [];
+    const params = [];
 
-    // ✅ Apply filters
     if (filters.tourName) {
-      query += ` AND g.tourName LIKE ?`;
+      baseQuery += " AND g.tourName LIKE ?";
       params.push(`%${filters.tourName}%`);
     }
 
     if (filters.tourType) {
-      query += ` AND g.tourTypeId = ?`;
+      baseQuery += " AND g.tourTypeId = ?";
       params.push(filters.tourType);
     }
 
     if (filters.travelStartDate && filters.travelEndDate) {
-      query += ` AND g.startDate >= ? AND g.endDate <= ?`;
+      baseQuery += " AND g.startDate >= ? AND g.endDate <= ?";
       params.push(filters.travelStartDate, filters.travelEndDate);
     } else if (filters.travelStartDate) {
-      query += ` AND g.startDate >= ?`;
+      baseQuery += " AND g.startDate >= ?";
       params.push(filters.travelStartDate);
     } else if (filters.travelEndDate) {
-      query += ` AND g.endDate <= ?`;
+      baseQuery += " AND g.endDate <= ?";
       params.push(filters.travelEndDate);
     }
 
     if (filters.totalDuration) {
-      query += ` AND CONCAT(g.days, 'D-', g.night, 'N') LIKE ?`;
+      baseQuery += " AND CONCAT(g.days, 'D-', g.night, 'N') LIKE ?";
       params.push(`%${filters.totalDuration}%`);
     }
 
     if (filters.travelMonth) {
-      const month = moment(filters.travelMonth, "YYYY-MM-DD").format("MM");
-      query += ` AND MONTH(g.startDate) = ?`;
-      params.push(month);
+      const monthMoment = moment(filters.travelMonth, ["YYYY-MM", "YYYY-MM-DD"], true);
+      if (monthMoment.isValid()) {
+        baseQuery += " AND MONTH(g.startDate) = ?";
+        params.push(monthMoment.format("MM"));
+      }
     }
 
-    // ✅ Count total for pagination
-    let countQuery = query.replace(/SELECT g\.\*, t\.tourTypeName/i, "SELECT COUNT(*) as total");
-    const [countResult] = await db.query(countQuery, params);
-    const total = countResult[0]?.total || 0;
+    if (filters.cityId) {
+      baseQuery += ` AND EXISTS (
+        SELECT 1 FROM grouptourscity gc
+        WHERE gc.groupTourId = g.groupTourId AND gc.cityId = ?
+      )`;
+      params.push(filters.cityId);
+    }
 
-    // ✅ Apply pagination and sorting
-    query += ` ORDER BY g.created_at DESC LIMIT ? OFFSET ?`;
-    params.push(perPage, offset);
+    if (filters.departureType) {
+      baseQuery += " AND g.departureTypeId = ?";
+      params.push(filters.departureType);
+    }
 
-    // ✅ Get filtered data
-    const [data] = await db.query(query, params);
+    const countQuery = `SELECT COUNT(*) AS total FROM (${baseQuery}) AS totalRows`;
+    const countParams = [...params];
+    const [countRows] = await db.query(countQuery, countParams);
+    const total = countRows[0]?.total || 0;
+
+    const finalQuery = `${baseQuery} ORDER BY g.created_at DESC LIMIT ? OFFSET ?`;
+    const finalParams = [...params, perPage, offset];
+    const [rows] = await db.query(finalQuery, finalParams);
+
+    const host = `${req.protocol}://${req.get("host")}`;
+    const buildUrl = (value) => {
+      if (!value) {
+        return "";
+      }
+      return /^https?:\/\//i.test(value) ? value : `${host}${value}`;
+    };
+
+    const data = rows.map((row) => {
+      const seatsBook = Number(row.bookedSeats) || 0;
+      const totalSeats = Number(row.totalSeats) || 0;
+      const hasDurationValues = row.days != null && row.night != null;
+      return {
+        groupTourId: row.groupTourId,
+        tourName: row.tourName,
+        tourCode: row.tourCode,
+        tourTypeName: row.tourTypeName,
+        startDate: row.startDate ? moment(row.startDate).format("DD-MM-YYYY") : "",
+        endDate: row.endDate ? moment(row.endDate).format("DD-MM-YYYY") : "",
+        duration: hasDurationValues ? `${row.days}D-${row.night}N` : "",
+        totalSeats,
+        seatsBook,
+        seatsAval: Math.max(totalSeats - seatsBook, 0),
+        pdfUrl: buildUrl(row.pdfUrl),
+        printUrl: buildUrl(row.printUrl),
+        predepartureUrl: buildUrl(row.predepartureUrl),
+        websiteBanner: row.websiteBanner,
+        websiteDescription: row.websiteDescription,
+      };
+    });
 
     res.status(200).json({
       message: "Group tours fetched successfully",
       filters,
-      total, // total records for pagination
+      total,
       perPage,
       page,
       currentPage: page,

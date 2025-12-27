@@ -104,24 +104,20 @@ export const getCities = async () => {
  */
 export const searchTrips = async (query) => {
   try {
-    // Convert query to lowercase for matching
-    const lowerQuery = query.toLowerCase();
+    const normalizedQuery = (query || "").trim().toLowerCase();
     console.log("🔎 Searching trips for query:", query);
 
-    // Fetch both group and tailor-made tours
     const [groupToursRes, tailorMadeRes] = await Promise.all([
       getGroupTours({ perPage: 100 }),
       getTailorMadeTours({ perPage: 100 }),
     ]);
 
-    // Extract data arrays from responses
     const groupTours = groupToursRes?.data || [];
     const tailorMadeTours = tailorMadeRes?.data || [];
 
     console.log("📊 Raw group tours count:", groupTours.length);
     console.log("📊 Raw tailor-made tours count:", tailorMadeTours.length);
 
-    // Check for generic/show-all queries
     const showAllKeywords = [
       "all",
       "every",
@@ -131,28 +127,30 @@ export const searchTrips = async (query) => {
       "count",
       "available",
     ];
-    const isShowAllQuery = showAllKeywords.some((keyword) =>
-      lowerQuery.includes(keyword)
-    );
+    const isShowAllQuery =
+      normalizedQuery.length === 0 ||
+      showAllKeywords.some((keyword) => normalizedQuery.includes(keyword));
 
     let matchedGroupTours = groupTours;
     let matchedTailorMade = tailorMadeTours;
 
-    // Only filter if it's NOT a show-all query
     if (!isShowAllQuery) {
-      // Filter tours based on keywords in the query
-      matchedGroupTours = groupTours.filter(
-        (tour) =>
-          lowerQuery.includes(tour.tourName?.toLowerCase() || "") ||
-          lowerQuery.includes(tour.tourCode?.toLowerCase() || "") ||
-          lowerQuery.includes(tour.tourTypeName?.toLowerCase() || "")
-      );
+      matchedGroupTours = groupTours.filter((tour) => {
+        const name = tour.tourName?.toLowerCase() || "";
+        const code = tour.tourCode?.toLowerCase() || "";
+        const type = tour.tourTypeName?.toLowerCase() || "";
+        return (
+          name.includes(normalizedQuery) ||
+          code.includes(normalizedQuery) ||
+          type.includes(normalizedQuery)
+        );
+      });
 
-      matchedTailorMade = tailorMadeTours.filter(
-        (tour) =>
-          lowerQuery.includes(tour.groupName?.toLowerCase() || "") ||
-          lowerQuery.includes(tour.tourType?.toLowerCase() || "")
-      );
+      matchedTailorMade = tailorMadeTours.filter((tour) => {
+        const name = tour.groupName?.toLowerCase() || "";
+        const type = tour.tourType?.toLowerCase() || "";
+        return name.includes(normalizedQuery) || type.includes(normalizedQuery);
+      });
     }
 
     console.log("✅ Matched group tours:", matchedGroupTours.length);

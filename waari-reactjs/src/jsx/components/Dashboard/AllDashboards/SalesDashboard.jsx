@@ -11,6 +11,187 @@ import { useSelector } from "react-redux";
 import { hasComponentPermission } from "../../../auth/PrivateRoute";
 import { Link } from "react-router-dom";
 
+const DASHBOARD_MOCKS = {
+	birthdays: [
+		{
+			familyHeadName: "Amit Sharma",
+			dob: "1990-12-27",
+			marriageDate: "2016-02-14",
+			contact: "+91 98230 12345",
+		},
+		{
+			familyHeadName: "Priya Patel",
+			dob: "1988-01-09",
+			marriageDate: "2014-11-22",
+			contact: "+91 98765 44110",
+		},
+	],
+	followups: {
+		gt: [
+			{
+				uniqueEnqueryId: "0012",
+				nextFollowUp: "27-12-2025",
+				nextFollowUpTime: "10:00 AM",
+				groupName: "Goa Delight",
+				paxNo: 4,
+				userName: "Sales Admin",
+			},
+			{
+				uniqueEnqueryId: "0040",
+				nextFollowUp: "28-12-2025",
+				nextFollowUpTime: "03:30 PM",
+				groupName: "Himalayan Escape",
+				paxNo: 6,
+				userName: "Meena Kale",
+			},
+		],
+		ct: [
+			{
+				uniqueEnqueryId: "0081",
+				nextFollowUp: "27-12-2025",
+				nextFollowUpTime: "12:15 PM",
+				groupName: "Maldives Honeymoon",
+				pax: 2,
+				userName: "Neeraj Joshi",
+			},
+			{
+				uniqueEnqueryId: "0095",
+				nextFollowUp: "29-12-2025",
+				nextFollowUpTime: "05:45 PM",
+				groupName: "Europe Explorer",
+				pax: 3,
+				userName: "Sales Admin",
+			},
+		],
+	},
+	metrics: {
+		loyaltyBooking: 9,
+		welcomeBooking: 4,
+		referralRate: 37,
+		nextRankCount: 5,
+		topTenRankCount: 8,
+		topFiveRankCount: 3,
+		currentBookingCount: 42,
+	},
+	topSalesPartners: [
+		{
+			userName: "Anita Rao",
+			domesticCountGt: 8,
+			internationalCountGt: 3,
+			total_count_gt: 11,
+			domesticCountCt: 5,
+			internationalCountCt: 2,
+			total_count_ct: 7,
+			total_count_overall: 18,
+			todaysBooking: 1,
+		},
+		{
+			userName: "Rahul Deshmukh",
+			domesticCountGt: 6,
+			internationalCountGt: 2,
+			total_count_gt: 8,
+			domesticCountCt: 4,
+			internationalCountCt: 1,
+			total_count_ct: 5,
+			total_count_overall: 13,
+			todaysBooking: 0,
+		},
+		{
+			userName: "Maya Fernandes",
+			domesticCountGt: 5,
+			internationalCountGt: 4,
+			total_count_gt: 9,
+			domesticCountCt: 3,
+			internationalCountCt: 2,
+			total_count_ct: 5,
+			total_count_overall: 14,
+			todaysBooking: 2,
+		},
+		{
+			userName: "Arjun Patel",
+			domesticCountGt: 4,
+			internationalCountGt: 1,
+			total_count_gt: 5,
+			domesticCountCt: 2,
+			internationalCountCt: 1,
+			total_count_ct: 3,
+			total_count_overall: 8,
+			todaysBooking: 0,
+		},
+		{
+			userName: "Sneha Kulkarni",
+			domesticCountGt: 3,
+			internationalCountGt: 2,
+			total_count_gt: 5,
+			domesticCountCt: 2,
+			internationalCountCt: 1,
+			total_count_ct: 3,
+			total_count_overall: 8,
+			todaysBooking: 1,
+		},
+	],
+	targets: {
+		gt: {
+			monthly: { total: 85, achieved: 62, remaining: 23 },
+			quarterly: { total: 240, achieved: 180, remaining: 60 },
+			yearly: { total: 960, achieved: 710, remaining: 250 },
+		},
+		ct: {
+			monthly: { total: 65, achieved: 44, remaining: 21 },
+			quarterly: { total: 180, achieved: 126, remaining: 54 },
+			yearly: { total: 720, achieved: 510, remaining: 210 },
+		},
+	},
+	gtGraph: {
+		target: [0, 45, 50, 55, 60, 65, 70, 72, 74, 78, 80, 82, 85],
+		achieve: [0, 38, 44, 48, 52, 58, 63, 66, 69, 71, 74, 77, 80],
+		barTotals: [12, 14, 16, 18, 15, 17, 19, 20, 22, 18, 16, 14],
+		barConfirmed: [8, 9, 11, 12, 10, 11, 13, 14, 15, 12, 11, 9],
+		barLost: [2, 2, 2, 3, 2, 3, 3, 3, 4, 3, 2, 2],
+		table: [
+			{
+				previousMonthTotal: 12,
+				currentMonthTotal: 15,
+				ongoing: 4,
+				confirmed: 9,
+				lost: 2,
+				conversionRate: 60,
+			},
+		],
+	},
+	ctGraph: {
+		target: [0, 30, 34, 36, 38, 42, 45, 47, 49, 50, 52, 54, 55],
+		achieve: [0, 24, 26, 28, 31, 34, 37, 39, 41, 42, 44, 45, 47],
+		barTotals: [6, 7, 8, 9, 8, 9, 10, 11, 12, 10, 9, 8],
+		barConfirmed: [4, 4, 5, 6, 5, 6, 7, 8, 8, 7, 6, 5],
+		barLost: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+		table: [
+			{
+				previousMonthTotal: 7,
+				currentMonthTotal: 9,
+				ongoing: 2,
+				confirmed: 6,
+				lost: 1,
+				conversionRate: 66,
+			},
+		],
+	},
+};
+
+const applyArrayFallback = (value, fallback) => {
+	if (Array.isArray(value) && value.length) {
+		return value;
+	}
+	return fallback;
+};
+
+const applyNumberFallback = (value, fallback) => {
+	if (value === null || value === undefined || Number.isNaN(Number(value))) {
+		return fallback;
+	}
+	return Number(value);
+};
+
 const calculateProgressPercentage = (
 	currentBookings,
 	bookingsNeededForNextRank
@@ -92,6 +273,176 @@ const Home = () => {
 	const [isFollowsLoading, setIsFollowsLoading] = useState(false);
 	const [todaysGTFolloups, setTodaysGTFolloups] = useState([])
 	const [todaysCTFolloups, setTodaysCTFolloups] = useState([])
+
+	const { gt: fallbackGtTargets, ct: fallbackCtTargets } = DASHBOARD_MOCKS.targets;
+
+	const displayBirthdays = applyArrayFallback(guestsWithDOB, DASHBOARD_MOCKS.birthdays);
+	const displayGTFollowups = applyArrayFallback(
+		todaysGTFolloups,
+		DASHBOARD_MOCKS.followups.gt
+	);
+	const displayCTFollowups = applyArrayFallback(
+		todaysCTFolloups,
+		DASHBOARD_MOCKS.followups.ct
+	);
+
+	const displayLoyaltyBooking = applyNumberFallback(
+		loyaltyBooking,
+		DASHBOARD_MOCKS.metrics.loyaltyBooking
+	);
+	const displayWelcomeBooking = applyNumberFallback(
+		welcomeBooking,
+		DASHBOARD_MOCKS.metrics.welcomeBooking
+	);
+	const displayReferralRate = applyNumberFallback(
+		refferalRate,
+		DASHBOARD_MOCKS.metrics.referralRate
+	);
+	const displayNextRankCount = applyNumberFallback(
+		nextRankCount,
+		DASHBOARD_MOCKS.metrics.nextRankCount
+	);
+	const displayTopTenRankCount = applyNumberFallback(
+		topTenRankCount,
+		DASHBOARD_MOCKS.metrics.topTenRankCount
+	);
+	const displayTopFiveRankCount = applyNumberFallback(
+		topFiveRankCount,
+		DASHBOARD_MOCKS.metrics.topFiveRankCount
+	);
+	const displayCurrentBookingCount = applyNumberFallback(
+		currentBookingCount,
+		DASHBOARD_MOCKS.metrics.currentBookingCount
+	);
+
+	const displayGtTargetArray = applyArrayFallback(
+		gtGraphArray,
+		DASHBOARD_MOCKS.gtGraph.target
+	);
+	const displayGtAchieveArray = applyArrayFallback(
+		gtAchieveArray,
+		DASHBOARD_MOCKS.gtGraph.achieve
+	);
+	const displayGtTotalEnquiries = applyArrayFallback(
+		totalEnquiriesGt,
+		DASHBOARD_MOCKS.gtGraph.barTotals
+	);
+	const displayGtConfirmedEnquiries = applyArrayFallback(
+		confirmedEnquiriesGt,
+		DASHBOARD_MOCKS.gtGraph.barConfirmed
+	);
+	const displayGtLostEnquiries = applyArrayFallback(
+		lostEnquiriesGt,
+		DASHBOARD_MOCKS.gtGraph.barLost
+	);
+	const displayGtTableData = applyArrayFallback(
+		enquiriesGT,
+		DASHBOARD_MOCKS.gtGraph.table
+	);
+
+	const displayCtTargetArray = applyArrayFallback(
+		ctGraphArray,
+		DASHBOARD_MOCKS.ctGraph.target
+	);
+	const displayCtAchieveArray = applyArrayFallback(
+		ctAchieveArray,
+		DASHBOARD_MOCKS.ctGraph.achieve
+	);
+	const displayCtTotalEnquiries = applyArrayFallback(
+		totalEnquiriesCt,
+		DASHBOARD_MOCKS.ctGraph.barTotals
+	);
+	const displayCtConfirmedEnquiries = applyArrayFallback(
+		confirmedEnquiriesCt,
+		DASHBOARD_MOCKS.ctGraph.barConfirmed
+	);
+	const displayCtLostEnquiries = applyArrayFallback(
+		lostEnquiriesCt,
+		DASHBOARD_MOCKS.ctGraph.barLost
+	);
+	const displayCtTableData = applyArrayFallback(
+		enquiriesCT,
+		DASHBOARD_MOCKS.ctGraph.table
+	);
+
+	const displayTopSalesPartners = applyArrayFallback(
+		top5SalesPartner,
+		DASHBOARD_MOCKS.topSalesPartners
+	);
+
+	const displayMonthlyTargetGt = applyNumberFallback(
+		monthlyTargetGt,
+		fallbackGtTargets.monthly.total
+	);
+	const displayQuarterlyTargetGt = applyNumberFallback(
+		quarterlyTargetGt,
+		fallbackGtTargets.quarterly.total
+	);
+	const displayYearlyTargetGt = applyNumberFallback(
+		yearlyTargetGt,
+		fallbackGtTargets.yearly.total
+	);
+	const displayAchieveMonthlyTargetGt = applyNumberFallback(
+		achieveMonthlyTargetGt,
+		fallbackGtTargets.monthly.achieved
+	);
+	const displayAchieveQuarterTargetGt = applyNumberFallback(
+		achieveQuarterTargetGt,
+		fallbackGtTargets.quarterly.achieved
+	);
+	const displayAchieveYearTargetGt = applyNumberFallback(
+		achieveYearTargetGt,
+		fallbackGtTargets.yearly.achieved
+	);
+	const displayRemainingMonthlyTargetGt = applyNumberFallback(
+		remainingMonthlyTargetGt,
+		fallbackGtTargets.monthly.remaining
+	);
+	const displayRemainingQuarterTargetGt = applyNumberFallback(
+		remainingQuarterTargetGt,
+		fallbackGtTargets.quarterly.remaining
+	);
+	const displayRemainingYearTargetGt = applyNumberFallback(
+		remainingYearTargetGt,
+		fallbackGtTargets.yearly.remaining
+	);
+
+	const displayMonthlyTargetCt = applyNumberFallback(
+		monthlyTargetCt,
+		fallbackCtTargets.monthly.total
+	);
+	const displayQuarterlyTargetCt = applyNumberFallback(
+		quarterlyTargetCt,
+		fallbackCtTargets.quarterly.total
+	);
+	const displayYearlyTargetCt = applyNumberFallback(
+		yearlyTargetCt,
+		fallbackCtTargets.yearly.total
+	);
+	const displayAchieveMonthlyTargetCt = applyNumberFallback(
+		achieveMonthlyTargetCt,
+		fallbackCtTargets.monthly.achieved
+	);
+	const displayAchieveQuarterTargetCt = applyNumberFallback(
+		achieveQuarterTargetCt,
+		fallbackCtTargets.quarterly.achieved
+	);
+	const displayAchieveYearTargetCt = applyNumberFallback(
+		achieveYearTargetCt,
+		fallbackCtTargets.yearly.achieved
+	);
+	const displayRemainingMonthlyTargetCt = applyNumberFallback(
+		remainingMonthlyTargetCt,
+		fallbackCtTargets.monthly.remaining
+	);
+	const displayRemainingQuarterTargetCt = applyNumberFallback(
+		remainingQuarterTargetCt,
+		fallbackCtTargets.quarterly.remaining
+	);
+	const displayRemainingYearTargetCt = applyNumberFallback(
+		remainingYearTargetCt,
+		fallbackCtTargets.yearly.remaining
+	);
 
 	const handlePageChange = (event, value) => {
 		setPage(value);
@@ -585,7 +936,7 @@ const Home = () => {
 								<div className="mt-3 mb-3 birthday-table">
 									<Table
 										cols={birthday}
-										data={guestsWithDOB || []}
+										data={displayBirthdays}
 										totalPages={totalCount}
 										isTableLoading={isTableLoading}
 										handlePageChange={handlePageChange}
@@ -609,7 +960,7 @@ const Home = () => {
 								<div className="mt-3 mb-3 birt`hday-table">
 									<Table
 										cols={todaysFollowupColumnsGT}
-										data={todaysGTFolloups || []}
+										data={displayGTFollowups}
 										isTableLoading={isFollowsLoading}
 										isPagination={false}
 									/>
@@ -630,7 +981,7 @@ const Home = () => {
 								<div className="mt-3 mb-3 birt`hday-table">
 									<Table
 										cols={todaysFollowupColumnsCT}
-										data={todaysCTFolloups || []}
+										data={displayCTFollowups}
 										isTableLoading={isFollowsLoading}
 										isPagination={false}
 									/>
@@ -651,7 +1002,7 @@ const Home = () => {
 											<div className="ms-4">
 												<p className="mb-0 text-nowrap">Loyalty Booking</p>
 												<h2 className="mb-0 font-w600">
-													{loyaltyBooking || 0}
+													{displayLoyaltyBooking}
 												</h2>
 											</div>
 										</div>
@@ -667,7 +1018,7 @@ const Home = () => {
 											<div className="ms-4">
 												<p className="mb-0 text-nowrap ">Welcome Booking</p>
 												<h2 className="mb-0 font-w600">
-													{welcomeBooking || 0}
+													{displayWelcomeBooking}
 												</h2>
 											</div>
 										</div>
@@ -683,7 +1034,7 @@ const Home = () => {
 										<div className="booking-status d-flex text-center align-items-center">
 											<div className="ms-4">
 												<p className="mb-0">Referral Rate</p>
-												<h2 className="mb-0 font-w600">{refferalRate || 0}</h2>
+												<h2 className="mb-0 font-w600">{displayReferralRate}</h2>
 											</div>
 										</div>
 									</div>
@@ -733,8 +1084,8 @@ const Home = () => {
 									<div className="card-title h5">Monthly Target</div>
 								</div>
 								<DualLine
-									achivedTarget={gtAchieveArray || []}
-									actualTarget={gtGraphArray || []}
+									achivedTarget={displayGtAchieveArray}
+									actualTarget={displayGtTargetArray}
 								/>
 							</div>
 						</div>
@@ -754,9 +1105,9 @@ const Home = () => {
 
 								{hasComponentPermission(permissions, 16) && (
 									<Bar3
-										confirmEnqData={confirmedEnquiriesGt}
-										lostEnqData={lostEnquiriesGt}
-										totalEnqData={totalEnquiriesGt}
+										confirmEnqData={displayGtConfirmedEnquiries}
+										lostEnqData={displayGtLostEnquiries}
+										totalEnqData={displayGtTotalEnquiries}
 									/>
 								)}
 
@@ -765,7 +1116,7 @@ const Home = () => {
 										<Table
 											cols={columns}
 											page={1}
-											data={enquiriesGT || []}
+											data={displayGtTableData}
 											totalPages={1}
 											isTableLoading={isLoading}
 										/>
@@ -790,13 +1141,13 @@ const Home = () => {
 										style={{ flexDirection: "column" }}
 									>
 										<CircularProgressbar
-											value={monthlyTargetGt || 0}
-											text={`Total-${monthlyTargetGt || 0}`}
+											value={displayMonthlyTargetGt}
+											text={`Total-${displayMonthlyTargetGt}`}
 										/>
 										<h6 className="mt-2">Monthly Target</h6>
 										<div className="heading-card">
-											<h6>Achieved:{achieveMonthlyTargetGt || 0}</h6>
-											<h6>Remaining:{remainingMonthlyTargetGt || 0}</h6>
+											<h6>Achieved:{displayAchieveMonthlyTargetGt}</h6>
+											<h6>Remaining:{displayRemainingMonthlyTargetGt}</h6>
 										</div>
 									</div>
 									<div
@@ -804,13 +1155,13 @@ const Home = () => {
 										style={{ flexDirection: "column" }}
 									>
 										<CircularProgressbar
-											value={quarterlyTargetGt || 0}
-											text={`Total-${quarterlyTargetGt || 0}`}
+											value={displayQuarterlyTargetGt}
+											text={`Total-${displayQuarterlyTargetGt}`}
 										/>
 										<h6 className="mt-2">Quarter Target</h6>
 										<div className="heading-card1">
-											<h6>Achieved:{achieveQuarterTargetGt || 0}</h6>
-											<h6>Remaining:{remainingQuarterTargetGt || 0}</h6>
+											<h6>Achieved:{displayAchieveQuarterTargetGt}</h6>
+											<h6>Remaining:{displayRemainingQuarterTargetGt}</h6>
 										</div>
 									</div>
 									<div
@@ -818,13 +1169,13 @@ const Home = () => {
 										style={{ flexDirection: "column" }}
 									>
 										<CircularProgressbar
-											value={yearlyTargetGt || 0}
-											text={`Total-${yearlyTargetGt || 0}`}
+											value={displayYearlyTargetGt}
+											text={`Total-${displayYearlyTargetGt}`}
 										/>
 										<h6 className="mt-2">Yearly Target</h6>
 										<div className="heading-card2">
-											<h6>Achieved:{achieveYearTargetGt || 0}</h6>
-											<h6>Remaining:{remainingYearTargetGt || 0}</h6>
+											<h6>Achieved:{displayAchieveYearTargetGt}</h6>
+											<h6>Remaining:{displayRemainingYearTargetGt}</h6>
 										</div>
 									</div>
 								</div>
@@ -859,8 +1210,8 @@ const Home = () => {
 									<div className="card-title h5">Monthly Target</div>
 								</div>
 								<DualLine
-									achivedTarget={ctAchieveArray}
-									actualTarget={ctGraphArray}
+									achivedTarget={displayCtAchieveArray}
+									actualTarget={displayCtTargetArray}
 								/>
 							</div>
 						</div>
@@ -881,9 +1232,9 @@ const Home = () => {
 
 								{hasComponentPermission(permissions, 17) && (
 									<Bar3
-										confirmEnqData={confirmedEnquiriesCt}
-										lostEnqData={lostEnquiriesCt}
-										totalEnqData={totalEnquiriesCt}
+										confirmEnqData={displayCtConfirmedEnquiries}
+										lostEnqData={displayCtLostEnquiries}
+										totalEnqData={displayCtTotalEnquiries}
 									/>
 								)}
 
@@ -892,7 +1243,7 @@ const Home = () => {
 										<Table
 											cols={columns_ct}
 											page={1}
-											data={enquiriesCT || []}
+											data={displayCtTableData}
 											totalPages={1}
 											isTableLoading={isLoading}
 										/>
@@ -918,13 +1269,13 @@ const Home = () => {
 									>
 										{/* <Pie4 /> */}
 										<CircularProgressbar
-											value={monthlyTargetCt || 0}
-											text={`Total-${monthlyTargetCt || 0}`}
+											value={displayMonthlyTargetCt}
+											text={`Total-${displayMonthlyTargetCt}`}
 										/>
 										<h6 className="mt-2">Monthly Target</h6>
 										<div className="heading-card">
-											<h6>Achieved:{achieveMonthlyTargetCt || 0}</h6>
-											<h6>Remaining:{remainingMonthlyTargetCt || 0}</h6>
+											<h6>Achieved:{displayAchieveMonthlyTargetCt}</h6>
+											<h6>Remaining:{displayRemainingMonthlyTargetCt}</h6>
 										</div>
 									</div>
 									<div
@@ -933,13 +1284,13 @@ const Home = () => {
 									>
 										{/* <Pie5 /> */}
 										<CircularProgressbar
-											value={quarterlyTargetCt || 0}
-											text={`Total-${quarterlyTargetCt || 0}`}
+											value={displayQuarterlyTargetCt}
+											text={`Total-${displayQuarterlyTargetCt}`}
 										/>
 										<h6 className="mt-2">Quarter Target</h6>
 										<div className="heading-card1">
-											<h6>Achieved:{achieveQuarterTargetCt || 0}</h6>
-											<h6>Remaining:{remainingQuarterTargetCt || 0}</h6>
+											<h6>Achieved:{displayAchieveQuarterTargetCt}</h6>
+											<h6>Remaining:{displayRemainingQuarterTargetCt}</h6>
 										</div>
 									</div>
 									<div
@@ -948,13 +1299,13 @@ const Home = () => {
 									>
 										{/* <Pie6 /> */}
 										<CircularProgressbar
-											value={yearlyTargetCt || 0}
-											text={`Total-${yearlyTargetCt || 0}`}
+											value={displayYearlyTargetCt}
+											text={`Total-${displayYearlyTargetCt}`}
 										/>
 										<h6 className="mt-2">Yearly Target</h6>
 										<div className="heading-card2">
-											<h6>Achieved:{achieveYearTargetCt || 0}</h6>
-											<h6>Remaining:{remainingYearTargetCt || 0}</h6>
+											<h6>Achieved:{displayAchieveYearTargetCt}</h6>
+											<h6>Remaining:{displayRemainingYearTargetCt}</h6>
 										</div>
 									</div>
 								</div>
@@ -1021,8 +1372,8 @@ const Home = () => {
 												<td></td>
 												<td></td>
 											</tr>
-											{top5SalesPartner &&
-												top5SalesPartner?.map((item, index) => (
+											{
+												displayTopSalesPartners.map((item, index) => (
 													<tr key={item.userName + index}>
 														<td>{item.userName}</td>
 														<td>{item.domesticCountGt}</td>
@@ -1035,10 +1386,10 @@ const Home = () => {
 														<td>{item?.todaysBooking || 0}</td>
 													</tr>
 												))}
-											{top5SalesPartner &&
-												top5SalesPartner?.data?.length == 0 && (
+											{
+												!displayTopSalesPartners.length && (
 													<tr>
-														<td colSpan={8}>Data not found</td>
+														<td colSpan={9}>Data not found</td>
 													</tr>
 												)}
 										</tbody>
@@ -1061,25 +1412,25 @@ const Home = () => {
 									</span>
 									<span className="fs-22 font-w600 text-white">
 										<span className="pe-2"></span>
-										{topTenRankCount}
+										{displayTopTenRankCount}
 									</span>
 								</div>
-								{topTenRankCount ? (
+								{displayTopTenRankCount ? (
 									<div className="progress default-progress h-auto">
 										<div
 											className="progress-bar bg-white progress-animated"
 											style={{
 												width: `${calculateProgressPercentage(
-													currentBookingCount,
-													topTenRankCount
+													displayCurrentBookingCount,
+													displayTopTenRankCount
 												)}%`,
 												height: "13px",
 											}}
 										>
 											<span className="sr-only">
 												{calculateProgressPercentage(
-													currentBookingCount,
-													topTenRankCount
+													displayCurrentBookingCount,
+													displayTopTenRankCount
 												)}
 												% Complete
 											</span>
@@ -1100,7 +1451,7 @@ const Home = () => {
 									</span>
 									<span className="fs-22 font-w600 text-white">
 										<span className="pe-2"></span>
-										{nextRankCount}
+										{displayNextRankCount}
 									</span>
 								</div>
 								<div className="progress default-progress h-auto">
@@ -1108,16 +1459,16 @@ const Home = () => {
 										className="progress-bar bg-white progress-animated"
 										style={{
 											width: `${calculateProgressPercentage(
-												currentBookingCount,
-												nextRankCount
+												displayCurrentBookingCount,
+												displayNextRankCount
 											)}%`,
 											height: "13px",
 										}}
 									>
 										<span className="sr-only">
 											{calculateProgressPercentage(
-												currentBookingCount,
-												nextRankCount
+												displayCurrentBookingCount,
+												displayNextRankCount
 											)}
 											% Complete
 										</span>
@@ -1136,25 +1487,25 @@ const Home = () => {
 									</span>
 									<span className="fs-22 font-w600 text-white">
 										<span className="pe-2"></span>
-										{topFiveRankCount}
+										{displayTopFiveRankCount}
 									</span>
 								</div>
-								{topFiveRankCount ? (
+								{displayTopFiveRankCount ? (
 									<div className="progress default-progress h-auto">
 										<div
 											className="progress-bar bg-white progress-animated"
 											style={{
 												width: `${calculateProgressPercentage(
-													currentBookingCount,
-													topFiveRankCount
+													displayCurrentBookingCount,
+													displayTopFiveRankCount
 												)}%`,
 												height: "13px",
 											}}
 										>
 											<span className="sr-only">
 												{calculateProgressPercentage(
-													currentBookingCount,
-													topFiveRankCount
+													displayCurrentBookingCount,
+													displayTopFiveRankCount
 												)}
 												% Complete
 											</span>

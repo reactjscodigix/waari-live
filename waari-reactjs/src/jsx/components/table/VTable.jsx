@@ -176,7 +176,12 @@ const Table = ({
                     >
                       {col.render
                         ? col.render(item, rowIndex)
-                        : item[col.dataIndex] ?  item[col.dataIndex] : "-"}
+                        : (() => {
+                            const cellValue = item[col.dataIndex];
+                            if (cellValue === 0) return 0;
+                            if (cellValue === "") return "-";
+                            return cellValue ?? "-";
+                          })()}
                     </td>
                   ))}
                 </tr>
