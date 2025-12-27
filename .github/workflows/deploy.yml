@@ -17,12 +17,15 @@ jobs:
             git pull origin main
             # Install backend deps
             cd waari-nodejs
-            npm install --production
+            # Install all dependencies including dev dependencies to ensure dotenv is available
+            npm install
+            # Or if you want production only, ensure dotenv is in dependencies (it is), but verify node_modules
+            # npm ci --production
             cd ..
             # Build frontend
             cd waari-reactjs
             npm install
-            npm run build
+            VITE_WAARI_BASEURL=https://waaritour.codigix.co/api npm run build
             cd ..
             # Restart PM2 app (replace 'waari' if your app name is different)
             pm2 restart waari
