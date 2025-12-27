@@ -10,57 +10,53 @@ const dayjs = require("dayjs");
 // list roles (matches PHP style)
 exports.listsRole = async (req, res) => {
   try {
-    // checks token
     const tokenData = await CommonController.checkToken(req.headers["token"], [
       128,
     ]);
-    if (!tokenData) {
+    if (!tokenData || tokenData.error) {
       return res.status(408).json({ message: "Invalid Token" });
     }
 
-    // Pagination
-    const perPage = parseInt(req.query.perPage) || 10;
-    const page = parseInt(req.query.page) || 1;
+    const perPage = parseInt(req.query.perPage, 10) || 10;
+    const page = parseInt(req.query.page, 10) || 1;
     const offset = (page - 1) * perPage;
 
-    // fetch roles
-    const query = `SELECT * FROM roles ORDER BY created_at DESC LIMIT ${perPage} OFFSET ${offset}`;
-    const [roles] = await db.execute(query);
+    const [totalResult] = await db.execute(`SELECT COUNT(*) as total FROM users`);
+    const total = totalResult[0]?.total || 0;
 
-    // get total count
-    const [totalResult] = await db.execute(
-      `SELECT COUNT(*) as total FROM roles`
+    const [users] = await db.execute(
+      `SELECT u.userId, u.userName, u.email, u.contact, u.status, u.roleId, r.roleName
+       FROM users u
+       LEFT JOIN roles r ON u.roleId = r.roleId
+       ORDER BY u.created_at DESC
+       LIMIT ${perPage} OFFSET ${offset}`
     );
-    const total = totalResult[0].total;
 
-    // prepare response array
-    let roles_array = [];
-    if (roles.length > 0) {
-      for (let value of roles) {
-        let myObj = {};
-        myObj.roleId = value.roleId;
-        myObj.roleName = value.roleName;
-        myObj.description = value.description;
-        myObj.status = value.status;
-        roles_array.push(myObj);
-      }
-    }
+    const usersArray = users.map((value) => ({
+      userId: value.userId,
+      userName: value.userName || "",
+      roleId: value.roleId,
+      roleName: value.roleName || "",
+      contact: value.contact || "",
+      email: value.email || "",
+      status: value.status ?? 0,
+    }));
 
     return res.status(200).json({
-      data: roles_array,
-      total: total,
+      data: usersArray,
+      total,
       currentPage: page,
-      perPage: perPage,
+      perPage,
       nextPageUrl:
         offset + perPage < total
           ? `/lists-user?perPage=${perPage}&page=${page + 1}`
           : null,
       previousPageUrl:
         page > 1 ? `/lists-user?perPage=${perPage}&page=${page - 1}` : null,
-      lastPage: Math.ceil(total / perPage),
+      lastPage: Math.ceil(total / perPage) || 1,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching users list:", error);
     return res.status(500).json({ message: "Server Error" });
   }
 };
@@ -3763,69 +3759,76 @@ exports.getListsByCatId = async (req, res) => {
 
 exports.addRoles = async (req, res) => {
   try {
+    const normalize = (value) =>
+      value === undefined ||
+      value === null ||
+      value === "undefined" ||
+      value === "null"
+        ? undefined
+        : value;
     const { roleName, isActive } = req.body;
-
-    // ✅ Validation
     if (!roleName || roleName.trim() === "") {
       return res.status(400).json({ message: "roleName is required" });
     }
-
-    // ✅ Token check
-    const tokenData = await CommonController.checkToken(
-      req.headers["token"],
-      [125] // permission ID for adding roles
-    );
-
-    if (tokenData.error) {
-      return res.status(401).json({ message: "Invalid or expired token" });
+    const token =
+      normalize(req.headers["token"]) ||
+      normalize(req.body?.token) ||
+      normalize(req.query?.token) ||
+      normalize(req.query?.headers?.token) ||
+      normalize(req.query["headers[token]"]);
+    if (!token) {
+      return res.status(401).json({ message: "Token is required" });
     }
-
-    let { userId, clientcode } = tokenData;
-
-    // ✅ Fallback if userId missing
-    if (!userId) {
-      if (!req.body.userId) {
-        return res
-          .status(400)
-          .json({ message: "userId missing in token or request" });
-      }
-      userId = req.body.userId;
+    const tokenData = await CommonController.checkToken(token, [125]);
+    if (!tokenData || tokenData.status !== 200) {
+      return res
+        .status(tokenData?.status || 401)
+        .json({ message: tokenData?.message || "Invalid or expired token" });
     }
-
-    // ✅ Fallback if clientcode missing → fetch from DB
-    if (!clientcode) {
+    const tokenUser = tokenData.data || {};
+    let userId =
+      normalize(req.body.userId) ||
+      normalize(req.query.userId) ||
+      normalize(req.query?.params?.userId) ||
+      tokenUser.userId;
+    let clientcode = tokenUser.clientcode;
+    if (!userId || !clientcode) {
       const [userRows] = await pool.execute(
-        `SELECT clientcode FROM users WHERE userId = ? LIMIT 1`,
-        [userId]
+        `SELECT userId, clientcode FROM users WHERE token = ? LIMIT 1`,
+        [token]
       );
-
       if (!userRows || userRows.length === 0) {
         return res.status(404).json({ message: "User not found" });
       }
-      clientcode = userRows[0].clientcode;
+      if (!userId) {
+        userId = userRows[0].userId;
+      }
+      if (!clientcode) {
+        clientcode = userRows[0].clientcode;
+      }
     }
-
+    if (!userId) {
+      return res
+        .status(400)
+        .json({ message: "userId missing in token or request" });
+    }
     if (!clientcode) {
       return res
         .status(400)
         .json({ message: "clientcode is required but missing" });
     }
-
-    // ✅ Insert role
     const [result] = await pool.execute(
       `INSERT INTO roles (roleName, isActive, clientcode, created_at, updated_at)
        VALUES (?, ?, ?, NOW(), NOW())`,
       [roleName.trim(), isActive ?? 1, clientcode]
     );
-
     if (result.affectedRows > 0) {
       return res.status(200).json({
         message: "Role added successfully",
         roleId: result.insertId,
       });
-    } else {
-      return res.status(500).json({ message: "Failed to add role" });
     }
+    return res.status(500).json({ message: "Failed to add role" });
   } catch (err) {
     console.error("Error adding role:", err);
     res.status(500).json({ message: "Internal server error" });

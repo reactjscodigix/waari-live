@@ -2352,6 +2352,249 @@ router.get("/view-plan-enq-users-data-ct", async (req, res) => {
   }
 });
 
+router.post(
+  "/enquiry-group-tour",
+  [
+    body("groupName").notEmpty().withMessage("groupName is required"),
+    body("groupTourId")
+      .notEmpty()
+      .withMessage("groupTourId is required")
+      .bail()
+      .isNumeric()
+      .withMessage("groupTourId must be numeric"),
+    body("enquiryReferId")
+      .notEmpty()
+      .withMessage("enquiryReferId is required")
+      .bail()
+      .isNumeric()
+      .withMessage("enquiryReferId must be numeric"),
+    body("familyHeadNo")
+      .notEmpty()
+      .withMessage("familyHeadNo is required")
+      .bail()
+      .isNumeric()
+      .withMessage("familyHeadNo must be numeric"),
+    body("nextFollowUp")
+      .notEmpty()
+      .withMessage("nextFollowUp is required"),
+    body("nextFollowUpTime")
+      .notEmpty()
+      .withMessage("nextFollowUpTime is required"),
+    body("contact").notEmpty().withMessage("contact is required"),
+    body("adults")
+      .notEmpty()
+      .withMessage("adults is required")
+      .bail()
+      .isNumeric()
+      .withMessage("adults must be numeric"),
+    body("child")
+      .optional()
+      .isNumeric()
+      .withMessage("child must be numeric"),
+    body("priorityId")
+      .optional()
+      .isNumeric()
+      .withMessage("priorityId must be numeric"),
+    body("guestRefId").optional().isString(),
+    body("guestenquiryref").optional().isString(),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res
+          .status(400)
+          .json({ message: errors.array().map((err) => err.msg) });
+      }
+
+      const tokenData = await CommonController.checkToken(req.headers["token"], [
+        25,
+        26,
+        118,
+        294,
+        302,
+      ]);
+      if (!tokenData || tokenData.status !== 200) {
+        return res.status(tokenData?.status || 401).json({
+          message: tokenData?.message || "Invalid Token",
+        });
+      }
+
+      const {
+        groupName,
+        groupTourId,
+        enquiryReferId,
+        priorityId,
+        nextFollowUp,
+        nextFollowUpTime,
+        contact,
+        remark = "",
+        mail,
+        email,
+        fullName,
+        guestName,
+        nameofguest,
+        familyHeadNo,
+        guestRefId,
+        guestenquiryref,
+        adults,
+        child,
+        assignTo,
+        countryCode,
+      } = req.body;
+
+      const resolvedName = (fullName || guestName || nameofguest || "").trim();
+      if (!resolvedName) {
+        return res.status(400).json({ message: ["fullName is required"] });
+      }
+
+      const normalizedName = resolvedName.replace(/\s+/g, " ");
+      const [firstName, ...rest] = normalizedName.split(" ");
+      const lastName = rest.join(" ");
+
+      const adultsCount = Number(adults || 0);
+      const childCount = Number(child || 0);
+      if (Number.isNaN(adultsCount) || adultsCount < 0) {
+        return res
+          .status(400)
+          .json({ message: ["adults must be a positive number"] });
+      }
+      if (Number.isNaN(childCount) || childCount < 0) {
+        return res
+          .status(400)
+          .json({ message: ["child must be zero or a positive number"] });
+      }
+      if (adultsCount + childCount === 0) {
+        return res
+          .status(400)
+          .json({ message: ["Total guests must be greater than zero"] });
+      }
+      if (adultsCount + childCount > 6) {
+        return res
+          .status(400)
+          .json({ message: ["Pax size cannot be more than 6"] });
+      }
+
+      const parsedFamilyHeadNo = Number(familyHeadNo);
+      if (Number.isNaN(parsedFamilyHeadNo) || parsedFamilyHeadNo <= 0) {
+        return res
+          .status(400)
+          .json({ message: ["familyHeadNo must be a positive number"] });
+      }
+
+      let phone = String(contact || "").trim();
+      if (!phone) {
+        return res.status(400).json({ message: ["contact is required"] });
+      }
+      if (countryCode && !phone.startsWith("+")) {
+        phone = `${countryCode}${phone}`;
+      }
+
+      const resolvedGuestRefId = guestRefId || guestenquiryref || null;
+      const resolvedEmail = mail || email || null;
+      const tokenUser = tokenData.data || {};
+      const assignedTo = assignTo ? Number(assignTo) : tokenUser.userId;
+      const clientcode = tokenUser.clientcode || "CODIGIX01";
+
+      if (!assignedTo || Number.isNaN(assignedTo)) {
+        return res
+          .status(400)
+          .json({ message: ["assignTo is required"] });
+      }
+
+      let connection;
+      try {
+        connection = await db.getConnection();
+        await connection.beginTransaction();
+
+        const [tourRows] = await connection.query(
+          "SELECT groupTourId, startDate FROM grouptours WHERE groupTourId = ? LIMIT 1",
+          [groupTourId]
+        );
+        if (!tourRows.length) {
+          await connection.rollback();
+          return res.status(404).json({ message: "Group tour not found" });
+        }
+
+        const [counterRows] = await connection.query(
+          "SELECT value FROM counter WHERE countId = 1 FOR UPDATE"
+        );
+        const counterValue = counterRows.length
+          ? Number(counterRows[0].value)
+          : 1;
+        await connection.query("UPDATE counter SET value = ? WHERE countId = 1", [
+          counterValue + 1,
+        ]);
+        const enquiryId = counterValue.toString().padStart(4, "0");
+
+        const guestIdentifier =
+          req.body.guestId ||
+          CommonController.generateGuestId(firstName || "GT", lastName || "Guest");
+
+        await connection.query(
+          `INSERT INTO enquirygrouptours
+            (groupTourId, guestId, guestRefId, enquiryReferId, priorityId, groupName, firstName, lastName, contact, mail, adults, child, familyHeadNo, assignTo, nextFollowUp, nextFollowUpTime, remark, enquiryId, createdBy, clientcode)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            groupTourId,
+            guestIdentifier,
+            resolvedGuestRefId,
+            enquiryReferId,
+            priorityId || null,
+            groupName,
+            firstName,
+            lastName || null,
+            phone,
+            resolvedEmail,
+            adultsCount,
+            childCount,
+            parsedFamilyHeadNo,
+            assignedTo,
+            nextFollowUp,
+            nextFollowUpTime,
+            remark,
+            enquiryId,
+            tokenUser.userId,
+            clientcode,
+          ]
+        );
+
+        await connection.query(
+          `INSERT INTO enquiries (enquiryId, createdBy, tourType, startDate, uniqueId, clientcode)
+           VALUES (?, ?, ?, ?, ?, ?)
+           ON DUPLICATE KEY UPDATE createdBy = VALUES(createdBy), tourType = VALUES(tourType), startDate = VALUES(startDate), uniqueId = VALUES(uniqueId), clientcode = VALUES(clientcode)`,
+          [
+            enquiryId,
+            tokenUser.userId,
+            1,
+            tourRows[0].startDate || null,
+            enquiryId,
+            clientcode,
+          ]
+        );
+
+        await connection.commit();
+        return res
+          .status(201)
+          .json({ message: "Group tour enquiry created successfully", data: { enquiryId } });
+      } catch (error) {
+        if (connection) {
+          await connection.rollback();
+        }
+        console.error("Error creating group tour enquiry:", error);
+        return res.status(500).json({ message: "Internal Server Error" });
+      } finally {
+        if (connection) {
+          connection.release();
+        }
+      }
+    } catch (error) {
+      console.error("Error creating group tour enquiry:", error);
+      return res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+);
+
 // POST /assign-user-to-plan-enq-gt
 
 router.post(
@@ -3113,37 +3356,58 @@ router.get("/loyality-point-history", async (req, res) => {
 // POST: /api/update-user-status
 router.post("/update-user-status", async (req, res) => {
   try {
-    const token = req.headers["token"];
-    const tokenData = await CommonController.checkToken(token, [130]); // allowed roles
-
-    if (tokenData.error) {
-      return res.status(401).json({ message: "Invalid Token" });
+    const normalize = (value) =>
+      value === undefined ||
+      value === null ||
+      value === "undefined" ||
+      value === "null"
+        ? undefined
+        : value;
+    const token =
+      normalize(req.headers["token"]) ||
+      normalize(req.body?.token) ||
+      normalize(req.query?.token) ||
+      normalize(req.query?.headers?.token) ||
+      normalize(req.query["headers[token]"]);
+    if (!token) {
+      return res.status(401).json({ message: "Token is required" });
     }
-
-    const { userId, status } = req.body;
-
-    // Validate input
-    if (!userId || isNaN(Number(userId))) {
+    const tokenData = await CommonController.checkToken(token, [130]);
+    if (!tokenData || tokenData.status !== 200) {
+      return res
+        .status(tokenData?.status || 401)
+        .json({ message: tokenData?.message || "Invalid Token" });
+    }
+    const rawUserId = normalize(
+      req.body.userId ??
+        req.query.userId ??
+        req.query["params[userId]"] ??
+        req.query.params?.userId
+    );
+    const resolvedUserId = rawUserId ?? tokenData.data?.userId;
+    const userId = Number(resolvedUserId);
+    if (!resolvedUserId || Number.isNaN(userId)) {
       return res
         .status(400)
         .json({ message: "userId is required and must be numeric" });
     }
-
-    // Check if user exists
+    const statusValue = normalize(
+      req.body.status ??
+        req.query.status ??
+        req.query["params[status]"] ??
+        req.query.params?.status ??
+        req.body?.statusValue
+    );
     const [users] = await db.query("SELECT * FROM users WHERE userId = ?", [
       userId,
     ]);
-
     if (!users || users.length === 0) {
       return res.status(404).json({ message: "User not found" });
     }
-
-    // Update user status
     await db.query("UPDATE users SET status = ? WHERE userId = ?", [
-      status,
+      statusValue,
       userId,
     ]);
-
     return res
       .status(200)
       .json({ message: "User status updated successfully" });
@@ -3326,23 +3590,39 @@ router.post(
 
 router.get("/view-users-data", async (req, res) => {
   try {
-    // ✅ Get token from headers
-    const token = req.headers["token"];
+    const normalize = (value) =>
+      value === undefined ||
+      value === null ||
+      value === "undefined" ||
+      value === "null"
+        ? undefined
+        : value;
+    const token =
+      normalize(req.headers["token"]) ||
+      normalize(req.query?.token) ||
+      normalize(req.query?.headers?.token) ||
+      normalize(req.query["headers[token]"]) ||
+      normalize(req.query.params?.token);
     if (!token) return res.status(401).json({ message: "Token is required" });
-
-    // ✅ Validate token (check role access)
-    const tokenData = await CommonController.checkToken(token, [367]); // adjust roleIds
-    if (tokenData.error) return res.status(401).json(tokenData);
-
-    // ✅ Get userId from query
-    const userId = req.query.userId;
-    if (!userId || isNaN(Number(userId))) {
+    const tokenData = await CommonController.checkToken(token, [367]);
+    if (!tokenData || tokenData.status !== 200) {
+      return res
+        .status(tokenData?.status || 401)
+        .json({ message: tokenData?.message || "Invalid Token" });
+    }
+    const rawUserId = normalize(
+      req.query.userId ??
+        req.query["params[userId]"] ??
+        req.query.params?.userId ??
+        req.body?.userId
+    );
+    const resolvedUserId = rawUserId ?? tokenData.data?.userId;
+    const userId = Number(resolvedUserId);
+    if (!resolvedUserId || Number.isNaN(userId)) {
       return res
         .status(400)
         .json({ message: "userId is required and must be numeric" });
     }
-
-    // ✅ Fetch base user with role
     const [usersData] = await db.query(
       `SELECT u.*, r.roleName 
        FROM users u
@@ -3350,27 +3630,39 @@ router.get("/view-users-data", async (req, res) => {
        WHERE u.userId = ?`,
       [userId]
     );
-
     if (!usersData.length) {
       return res.status(404).json({ message: "User does not exist" });
     }
-
     const user = usersData[0];
-
-    // ✅ Fetch user details from view with joins
-    const [userInfoData] = await db.query(
-      `SELECT ud.*, s.sectorName, dp.positionName, dd.departmentName
-       FROM user_details_view ud
-       LEFT JOIN sectors s ON ud.sectorId = s.sectorId
-       LEFT JOIN dropdownpositions dp ON ud.positionId = dp.positionId
-       LEFT JOIN dropdowndepartment dd ON ud.departmentId = dd.departmentId
-       WHERE ud.userId = ?`,
-      [userId]
-    );
-
-    const userInfo = userInfoData.length ? userInfoData[0] : {};
-
-    // ✅ Build response object
+    let userInfo = {};
+    try {
+      const [userInfoData] = await db.query(
+        `SELECT ud.*, s.sectorName, dp.positionName, dd.departmentName
+         FROM user_details_view ud
+         LEFT JOIN sectors s ON ud.sectorId = s.sectorId
+         LEFT JOIN dropdownpositions dp ON ud.positionId = dp.positionId
+         LEFT JOIN dropdowndepartment dd ON ud.departmentId = dd.departmentId
+         WHERE ud.userId = ?`,
+        [userId]
+      );
+      if (userInfoData.length) {
+        userInfo = userInfoData[0];
+      }
+    } catch (viewErr) {
+      console.warn("user_details_view unavailable, falling back to userdetails", viewErr.code);
+      const [userInfoData] = await db.query(
+        `SELECT ud.*, s.sectorName, dp.positionName, dd.departmentName
+         FROM userdetails ud
+         LEFT JOIN sectors s ON ud.sectorId = s.sectorId
+         LEFT JOIN dropdownpositions dp ON ud.positionId = dp.positionId
+         LEFT JOIN dropdowndepartment dd ON ud.departmentId = dd.departmentId
+         WHERE ud.userId = ?`,
+        [userId]
+      );
+      if (userInfoData.length) {
+        userInfo = userInfoData[0];
+      }
+    }
     const myObj = {
       userId: user.userId,
       userName: user.userName || "",
@@ -3406,7 +3698,6 @@ router.get("/view-users-data", async (req, res) => {
       sectorId: userInfo.sectorId || "",
       sectorName: userInfo.sectorName || "",
     };
-
     return res.status(200).json({ data: myObj });
   } catch (err) {
     console.error("Error in viewUsersData:", err);

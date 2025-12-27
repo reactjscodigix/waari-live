@@ -503,9 +503,10 @@ const Home = () => {
 
 
 	useEffect(() => {
+		if (!permissions?.length) return;
 		hasComponentPermission(permissions, 26) && todaysFollowUpGT();
 		hasComponentPermission(permissions, 32) && todaysFollowUpCT();
-	}, [page, perPageItem]);
+	}, [permissions]);
 
 
 	//get loyalty booking
@@ -878,10 +879,12 @@ const Home = () => {
 	}, []);
 
 	useEffect(() => {
+		if (!permissions?.length) return;
 		hasComponentPermission(permissions, 11) && getBirthDayData();
-	}, [page, perPageItem]);
+	}, [permissions, page, perPageItem]);
 
 	useEffect(() => {
+		if (!permissions?.length) return;
 		hasComponentPermission(permissions, 1) && getLoyaltyBooking();
 
 		hasComponentPermission(permissions, 2) && getWelcomeBooking();
@@ -907,10 +910,14 @@ const Home = () => {
 		hasComponentPermission(permissions, 17) && getEnquiryGraphCt();
 
 		hasComponentPermission(permissions, 19) && getEnquiriesCT();
-	}, []);
+	}, [permissions]);
 
 	useEffect(() => {
+		if (!permissions?.length) return;
 		hasComponentPermission(permissions, 20) && getTop5SalesPartnerData();
+	}, [permissions]);
+
+	useEffect(() => {
 		// While view farmer page is active, the yadi tab must also activated
 		let element = document.getElementById("Dashboard");
 		if (element) {

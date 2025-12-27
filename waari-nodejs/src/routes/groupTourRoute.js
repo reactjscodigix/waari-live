@@ -3357,6 +3357,10 @@ router.get(
   "/sales-team-lead-listing",
   GroupTourController.salesTeamLeadListing
 );
+router.get(
+  "/sales-list-team-lead",
+  GroupTourController.salesTeamLeadListing
+);
 
 ////////////////////////////////////////  RoleManagement Controller///////////
 router.post(

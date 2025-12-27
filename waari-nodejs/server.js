@@ -151,6 +151,8 @@ app.use("/api/ai", aiRoutes);
 // PDF Routes
 const pdfRoutes = require("./src/routes/pdfRoutes");
 app.use("/api", pdfRoutes);
+const couponRoutes = require("./src/routes/coupon");
+app.use("/api", couponRoutes);
 
 // const cityListRoutes = require("./src/routes/cityList");
 // app.use("/api/city-list", cityListRoutes.cityList)

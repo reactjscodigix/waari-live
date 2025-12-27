@@ -173,182 +173,106 @@ const Grouptour = () => {
 
 	//TABLE COLOMN1
 	const columns_upcoming = [
-		{
-			title: "Enquiry Id",
-			dataIndex: "uniqueEnqueryId",
-			key: "enquiryGroupId",
-			width: 50,
-		},
-		{
-			title: "Enquiry Date",
-			dataIndex: "enqDate",
-			key: "enqDate",
-			width: 60,
-			sortable: true,
-		},
-		{
-			title: "Guest Name",
-			dataIndex: "guestName",
+	{
+		title: "Enquiry Id",
+		dataIndex: "uniqueEnqueryId",
+		key: "uniqueEnqueryId",
+		width: 70,
+	},
+	{
+		title: "Enquiry Date",
+		dataIndex: "enquiryDate",
+		key: "enquiryDate",
+		width: 90,
+		sortable: true,
+	},
+	{
+		title: "Follow Up Date",
+		dataIndex: "nextFollowUp",
+		key: "nextFollowUp",
+		width: 90,
+		sortable: true,
+	},
+	{
+		title: "Follow Up Time",
+		dataIndex: "nextFollowUpTime",
+		key: "nextFollowUpTime",
+		width: 80,
+	},
+	{
+		title: "Group Name",
+		dataIndex: "groupName",
+		key: "groupName",
+		width: 120,
+	},
+	{
+		title: "Tour Name",
+		dataIndex: "tourName",
+		key: "tourName",
+		width: 120,
+	},
+	{
+		title: "Name Of Guest",
+		dataIndex: "guestName",
+		key: "guestName",
+		width: 140,
+		sortable: true,
+	},
+	{
+		title: "Pax",
+		dataIndex: "paxNo",
+		key: "paxNo",
+		width: 60,
+	},
+	{
+		title: "Allocated To",
+		dataIndex: "userName",
+		key: "userName",
+		width: 120,
+	},
+	{
+		title: "Status",
+		dataIndex: "remark",
+		key: "remark",
+		render: (item) => (
+			<span className="badge light badge-warning">
+				{item?.remark || "Scheduled"}
+			</span>
+		),
+		width: 110,
+	},
+	{
+		title: "Action",
+		render: (item) => (
+			<>
+				<div className="d-flex  justify-content-center">
+					<span
+						onClick={() => {
+							navigate(
+								`/details/group-tour/${item.enquiryGroupId}/${item.groupPaymentDetailId}/${item.familyHeadGtId}`
+							);
+					}}
+					>
+						<Link className="btn-tick">
+						<Tooltip title="View">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								height="1em"
+								viewBox="0 0 576 512"
+							>
+								<path d="M288 80c-65.2 0-118.8 29.6-159.9 67.7C89.6 183.5 63 226 49.4 256c13.6 30 40.2 72.5 78.6 108.3C169.2 402.4 222.8 432 288 432s118.8-29.6 159.9-67.7C486.4 328.5 513 286 526.6 256c-13.6-30-40.2-72.5-78.6-108.3C406.8 109.6 353.2 80 288 80zM95.4 112.6C142.5 68.8 207.2 32 288 32s145.5 36.8 192.6 80.6c46.8 43.5 78.1 95.4 93 131.1c3.3 7.9 3.3 16.7 0 24.6c-14.9 35.7-46.2 87.7-93 131.1C433.5 443.2 368.8 480 288 480s-145.5-36.8-192.6-80.6C48.6 356 17.3 304 2.5 268.3c-3.3-7.9-3.3-16.7 0-24.6C17.3 208 48.6 156 95.4 112.6zM288 336c44.2 0 80-35.8 80-80s-35.8-80-80-80c-.7 0-1.3 0-2 0c1.3 5.1 2 10.5 2 16c0 35.3-28.7 64-64 64c-5.5 0-10.9-.7-16-2c0 .7 0 1.3 0 2c0 44.2 35.8 80 80 80zm0-208a128 128 0 1 1 0 256 128 128 0 1 1 0-256z" />
+							</svg>
+						</Tooltip>
+					</Link>
+				</span>
+				</div>
+			</>
+		),
+		key: "bill",
+		width: 80,
+	},
+];
 
-			key: "guestName",
-			width: 120,
-			sortable: true,
-		},
-		{
-			title: "Travel Start Date",
-			dataIndex: "startDate",
-			key: "startDate",
-			width: 70,
-			sortable: true,
-		},
-		{
-			title: "Travel End Date",
-			dataIndex: "endDate",
-			key: "endDate",
-			width: 70,
-			sortable: true,
-		},
-		{
-			title: "Phone No.",
-			dataIndex: "contact",
-			key: "contact",
-			width: 80,
-		},
-		{
-			title: "Tour Name",
-			dataIndex: "tourName",
-			key: "tourName",
-			width: 100,
-		},
-		{
-			title: "Tour Price",
-			dataIndex: "tourPrice",
-			key: "tourPrice",
-			width: 90,
-		},
-		{
-			title: "Discount",
-			dataIndex: "discount",
-			key: "discount",
-			width: 90,
-		},
-		{
-			title: "Discounted",
-			dataIndex: "discounted",
-			key: "discounted",
-			width: 90,
-		},
-		{
-			title: "GST",
-			dataIndex: "gst",
-			key: "gst",
-			width: 90,
-		},
-		{
-			title: "TCS",
-			dataIndex: "tcs",
-			key: "tcs",
-			width: 90,
-		},
-		{
-			title: "Grand",
-			dataIndex: "grand",
-			key: "grand",
-			width: 50,
-		},
-		{
-			title: "Paid",
-			dataIndex: "advancePayment",
-			key: "advancePayment",
-			width: 50,
-		},
-		{
-			title: "Balance",
-			dataIndex: "balance",
-			key: "balance",
-			width: 70,
-		},
-		// {
-		//   title: "Due Date",
-		//   dataIndex: "dueDate",
-		//   key: "dueDate",
-		//   width: 90,
-		// },
-		{
-			title: "Status",
-			dataIndex: "status",
-			key: "status",
-			render: (item) => (
-				<>
-					<span className="badge light badge-success">Paid</span>
-					<span className="badge light badge-yellow d-none ">Pending</span>
-				</>
-			),
-			width: 90,
-		},
-		{
-			title: "Action",
-			render: (item) => (
-				<>
-					<div className="d-flex  justify-content-center">
-						{/* <Link to="#" className="btn-link">
-             View
-            </Link> */}
-
-						<span
-							onClick={() => {
-								navigate(
-									`/details/group-tour/${item.enquiryGroupId}/${item.groupPaymentDetailId}/${item.familyHeadGtId}`
-								);
-							}}
-						>
-							<Link className="btn-tick">
-							<Tooltip title="View">
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									height="1em"
-									viewBox="0 0 576 512"
-								>
-									<path d="M288 80c-65.2 0-118.8 29.6-159.9 67.7C89.6 183.5 63 226 49.4 256c13.6 30 40.2 72.5 78.6 108.3C169.2 402.4 222.8 432 288 432s118.8-29.6 159.9-67.7C486.4 328.5 513 286 526.6 256c-13.6-30-40.2-72.5-78.6-108.3C406.8 109.6 353.2 80 288 80zM95.4 112.6C142.5 68.8 207.2 32 288 32s145.5 36.8 192.6 80.6c46.8 43.5 78.1 95.4 93 131.1c3.3 7.9 3.3 16.7 0 24.6c-14.9 35.7-46.2 87.7-93 131.1C433.5 443.2 368.8 480 288 480s-145.5-36.8-192.6-80.6C48.6 356 17.3 304 2.5 268.3c-3.3-7.9-3.3-16.7 0-24.6C17.3 208 48.6 156 95.4 112.6zM288 336c44.2 0 80-35.8 80-80s-35.8-80-80-80c-.7 0-1.3 0-2 0c1.3 5.1 2 10.5 2 16c0 35.3-28.7 64-64 64c-5.5 0-10.9-.7-16-2c0 .7 0 1.3 0 2c0 44.2 35.8 80 80 80zm0-208a128 128 0 1 1 0 256 128 128 0 1 1 0-256z" />
-								</svg>
-								</Tooltip>
-							</Link>
-						</span>
-					</div>
-				</>
-			),
-			key: "bill",
-			width: 80,
-		},
-		// {
-		//   title: "Billing",
-		//   render: (item) => (
-		//     <>
-		//       <div className="d-flex  justify-content-center">
-		//         {/* <Link to="/details/group-tour" className="btn-link">
-		//           View Details
-		//         </Link> */}
-
-		//         <span
-		//          onClick={() => {
-		//             console.log(item);
-		//             navigate(`/details/group-tour`, {
-		//               state: { id: item?.enquiryGroupId },
-		//             });
-		//           }}
-		//         >
-		//           <Link className="btn-tick">
-		//   <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 576 512">
-		//     <path d="M288 80c-65.2 0-118.8 29.6-159.9 67.7C89.6 183.5 63 226 49.4 256c13.6 30 40.2 72.5 78.6 108.3C169.2 402.4 222.8 432 288 432s118.8-29.6 159.9-67.7C486.4 328.5 513 286 526.6 256c-13.6-30-40.2-72.5-78.6-108.3C406.8 109.6 353.2 80 288 80zM95.4 112.6C142.5 68.8 207.2 32 288 32s145.5 36.8 192.6 80.6c46.8 43.5 78.1 95.4 93 131.1c3.3 7.9 3.3 16.7 0 24.6c-14.9 35.7-46.2 87.7-93 131.1C433.5 443.2 368.8 480 288 480s-145.5-36.8-192.6-80.6C48.6 356 17.3 304 2.5 268.3c-3.3-7.9-3.3-16.7 0-24.6C17.3 208 48.6 156 95.4 112.6zM288 336c44.2 0 80-35.8 80-80s-35.8-80-80-80c-.7 0-1.3 0-2 0c1.3 5.1 2 10.5 2 16c0 35.3-28.7 64-64 64c-5.5 0-10.9-.7-16-2c0 .7 0 1.3 0 2c0 44.2 35.8 80 80 80zm0-208a128 128 0 1 1 0 256 128 128 0 1 1 0-256z"/></svg>
-		//     </Link>
-		//         </span>
-		//       </div>
-		//     </>
-		//   ),
-		//   key: "billing",
-		//   width: 60,
-		// },
-	];
 
 	// for todays pagination start
 
@@ -416,7 +340,7 @@ const Grouptour = () => {
 		try {
 			setIsLoadingUpcoming(true);
 			const response = await get(
-				`/confirmpay-list?perPage=${perPageItemUpcoming}&page=${pageUpcoming}&guestName=${guestNameUpcoming}&tourName=${tourNameUpcoming}&travelStartDate=${travelStartDateUpcoming}&travelEndDate=${travelEndDateUpcoming}`
+				`/upcoming-list-group-tour?perPage=${perPageItemUpcoming}&page=${pageUpcoming}&search=${guestNameUpcoming}&tourName=${tourNameUpcoming}&startDate=${travelStartDateUpcoming}&endDate=${travelEndDateUpcoming}`
 			);
 			setIsLoadingUpcoming(false);
 			setDataNext(response?.data?.data);
@@ -619,7 +543,7 @@ const Grouptour = () => {
 											type="button"
 											className="btn btn-primary filter-btn"
 											onClick={() => {
-												setPage(1);
+												setPageUpcoming(1);
 												UpcomingFollowUp();
 											}}
 										>
@@ -636,7 +560,7 @@ const Grouptour = () => {
 					<div className="col-lg-12">
 						<div className="card">
 							<div className="card-header card-header-second">
-								<div className="card-title h5">Payments and Billing</div>
+								<div className="card-title h5">Upcoming Follow-Ups</div>
 							</div>
 							<div className="card-body">
 								<Table

@@ -3934,10 +3934,18 @@ exports.salesTeamLeadListing = async (req, res) => {
     const salesTeamArray = [];
 
     for (const value of salesTeamResults) {
+      const resolvedTeamName =
+        value.teamName ||
+        value.teamLeadName ||
+        value.team_lead_name ||
+        value.team_title ||
+        value.name ||
+        "";
       const myObj = {
         id: value.id,
-        teamName: value.teamName,
+        teamName: resolvedTeamName,
         leadId: value.userName,
+        userName: value.userName,
         assignAgent: [],
       };
 
@@ -3957,13 +3965,14 @@ exports.salesTeamLeadListing = async (req, res) => {
     }
 
     const totalPages = Math.ceil(total / perPage);
+    const basePath = `${req.baseUrl || ""}${req.path || ""}` || "";
     const nextPageUrl =
       page < totalPages
-        ? `/sales-team-lead-listing?page=${page + 1}&perPage=${perPage}`
+        ? `${basePath}?page=${page + 1}&perPage=${perPage}`
         : null;
     const previousPageUrl =
       page > 1
-        ? `/sales-team-lead-listing?page=${page - 1}&perPage=${perPage}`
+        ? `${basePath}?page=${page - 1}&perPage=${perPage}`
         : null;
 
     return res.status(200).json({
